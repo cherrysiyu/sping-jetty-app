@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+     xmlns:aop="http://www.springframework.org/schema/aop"
+     xmlns:tx="http://www.springframework.org/schema/tx"
+     xmlns:jdbc="http://www.springframework.org/schema/jdbc"
+     xmlns:context="http://www.springframework.org/schema/context"
+     xmlns:util="http://www.springframework.org/schema/util"
+     xsi:schemaLocation="
+     http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.2.xsd
+     http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.2.xsd
+     http://www.springframework.org/schema/jdbc http://www.springframework.org/schema/jdbc/spring-jdbc-3.2.xsd
+     http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-3.0.xsd
+     http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-3.2.xsd
+     http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-3.2.xsd">
+	<bean id="placeHolder" class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+		<property name="locations" value="config/app.properties" />
+	</bean>
+	
+    <!-- ServletContextHandler -->
+    <bean id="context" class="com.cherry.application.jetty.CustomeServletContextHandler">
+          <property name="contextPath" value="${http.contextPath}"></property>
+          <constructor-arg index="0"> 
+          			<list>
+          				<bean class="com.cherry.application.jetty.InitBean">
+          					<property name="className" value="com.cherry.application.webcommon.SetCharacterEncodingFilter"/>
+          					<property name="pathSpec" value="/*"/>
+          				</bean>
+          			</list>  
+	 	</constructor-arg> 
+    </bean>
+    
+     <bean id="handlers" class="org.eclipse.jetty.server.handler.HandlerList">  
+                <property name="handlers">  
+                    <list>  
+                       <ref bean="context" />
+                    </list>  
+                </property>  
+        </bean>  
+            
+	<!-- HTTP服务 -->
+	<bean id="httpServer" class="org.eclipse.jetty.server.Server" destroy-method="stop">
+		<!-- =========================================================== -->
+	    <!-- Server Thread Pool                                          -->
+	    <!-- =========================================================== -->
+		<property name="ThreadPool">
+			<bean class="com.cherry.application.jetty.JettyQueuedThreadPool">
+				<property name="minThreads" value="8"></property>
+		        <property name="maxThreads" value="48"></property>
+		        <property name="maxQueued" value="20000"></property>
+		        <property name="detailedDump" value="false"></property>
+			</bean>
+		</property>
+    
+    <!-- =========================================================== -->
+    <!-- Set connectors                                              -->
+    <!-- =========================================================== -->
+	<property name="connectors">
+			<list>
+				<bean id="connector" class="org.eclipse.jetty.server.nio.SelectChannelConnector">
+				  <property name="port" value="${http.serverPort}" />
+				  <property name="maxIdleTime" value="30000" />
+	              <property name="Acceptors" value="4" />
+	              <property name="statsOn" value="false" />
+	              <property name="confidentialPort" value="8443" />
+	              <property name="lowResourcesConnections" value="220000" />
+		   		  <property name="lowResourcesMaxIdleTime" value="5000" />
+		    	  <property name="requestBufferSize" value="13107200" />
+		    	  <property name="requestHeaderSize" value="13107200" />
+				  <property name="responseBufferSize" value="13107200" />
+				  <property name="responseHeaderSize" value="13107200" />
+				</bean>
+			</list>
+	</property>
+
+     <!-- =========================================================== -->
+    <!-- Set Servlets handler                                        -->
+    <!-- =========================================================== -->
+    
+      <property name="handler" ref="handlers"></property>  
+        
+        
+         <!-- =========================================================== -->
+    <!-- extra options                                               -->
+    <!-- =========================================================== -->
+     <property name="stopAtShutdown" value="true" />
+      <property name="sendServerVersion" value="false" />
+       <property name="sendDateHeader" value="true" />
+        <property name="gracefulShutdown" value="1000" />
+    <!-- =========================================================== -->
+	</bean>
+	
+	
+</beans>
